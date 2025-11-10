@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prescription-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: prescription-service
+  template:
+    metadata:
+      labels:
+        app: prescription-service
+    spec:
+      containers:
+        - name: prescription-service
+          image: prescription-service:1.0
+          ports:
+            - containerPort: 8085
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: k8s
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prescription-service
+spec:
+  selector:
+    app: prescription-service
+  ports:
+    - port: 8085
+      targetPort: 8085
+  type: ClusterIP

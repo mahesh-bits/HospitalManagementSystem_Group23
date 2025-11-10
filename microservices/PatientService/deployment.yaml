@@ -1,0 +1,93 @@
+# ------------------ CONFIGMAP ------------------
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: patient-config
+  labels:
+    app: patient-service
+data:
+  SPRING_DATASOURCE_URL: jdbc:mysql://mysql-patient:3306/patient-service-db
+  SPRING_JPA_HIBERNATE_DDL_AUTO: update
+  SPRING_JPA_SHOW_SQL: "true"
+
+---
+# ------------------ SECRET ------------------
+apiVersion: v1
+kind: Secret
+metadata:
+  name: patient-secret
+  labels:
+    app: patient-service
+type: Opaque
+data:
+  SPRING_DATASOURCE_USERNAME: root     # base64 for "root"
+  SPRING_DATASOURCE_PASSWORD: root     # base64 for "root"
+
+---
+# ------------------ DEPLOYMENT ------------------
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-service
+  labels:
+    app: patient-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: patient-service
+  template:
+    metadata:
+      labels:
+        app: patient-service
+    spec:
+      containers:
+        - name: patient-service
+#          image: microservices-patient-service:latest  # built locally or pushed to registry
+          image: patient-service:1.0  # built locally or pushed to registry
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          envFrom:
+            - configMapRef:
+                name: patient-config
+            - secretRef:
+                name: patient-secret
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            timeoutSeconds: 3
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+
+---
+# ------------------ SERVICE ------------------
+apiVersion: v1
+kind: Service
+metadata:
+  name: patient-service
+  labels:
+    app: patient-service
+spec:
+  selector:
+    app: patient-service
+  ports:
+    - name: http
+      port: 8081
+      targetPort: 8081
+  type: ClusterIP

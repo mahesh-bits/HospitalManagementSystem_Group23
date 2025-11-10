@@ -1,0 +1,376 @@
+services:
+  # ---------------------- 7 Services --------------------
+  # -------------------- PatientService --------------------
+  mysql-patient:
+    image: mysql:8.0
+    container_name: mysql-patient
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: patient-service-db
+      # MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    ports:
+      # - "3407:3306"   # host:container
+      - "3307:3306"   # host:container
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - patient_db_data:/var/lib/mysql
+    networks:
+      - backend
+
+  patient-service:
+    build:
+      context: ./PatientService
+      dockerfile: Dockerfile
+    container_name: patient-service
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-patient:3306/patient-service-db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SERVER_PORT: 8081
+    depends_on:
+      mysql-patient:
+        condition: service_healthy
+    networks:
+      - backend
+
+  # ---------------- DoctorAndSchedulingService ---------------- 
+  mysql-doctor:
+    image: mysql:8.0
+    container_name: mysql-docter
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: doctor-and-scheduling-db
+      MYSQL_PASSWORD: root
+    ports:
+      # - "3408:3306"   # host:container
+      - "3308:3306"   # host:container
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - docter_db_data:/var/lib/mysql
+    networks:
+      - backend
+
+  doctor-service:
+    build:
+      context: ./DoctorAndSchedulingService
+      dockerfile: Dockerfile
+    container_name: doctor-service
+    restart: always
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-doctor:3306/doctor-and-scheduling-db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SERVER_PORT: 8082
+    depends_on:
+      mysql-doctor:
+        condition: service_healthy
+    networks:
+      - backend
+
+
+  # -------------------- AppointmentService --------------------
+  mysql-appointment:
+    image: mysql:8.0
+    container_name: mysql-appointment
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: appointment-service-db
+      MYSQL_PASSWORD: root
+    ports:
+      # - "3409:3306"   # host:container
+      - "3309:3306"   # host:container
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - appointment_db_data:/var/lib/mysql
+    networks:
+      - backend
+
+  appointment-service:
+    build:
+      context: ./AppointmentService
+      dockerfile: Dockerfile
+    container_name: appointment-service
+    restart: always
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-appointment:3306/appointment-service-db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SERVER_PORT: 8083
+    depends_on:
+      mysql-appointment:
+        condition: service_healthy
+    networks:
+      - backend
+
+
+  # -------------------- BillingService --------------------
+  mysql-billing:
+    image: mysql:8.0
+    container_name: mysql-billing
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: billing-service-db
+      MYSQL_PASSWORD: root
+    ports:
+      # - "3410:3306"   # host:container
+      - "3310:3306"   # host:container
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - billing_db_data:/var/lib/mysql
+    networks:
+      - backend
+  
+  billing-service:
+    build:
+      context: ./BillingService
+      dockerfile: Dockerfile
+    container_name: billing-service
+    restart: always
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-billing:3306/billing-service-db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SERVER_PORT: 8084
+    depends_on:
+      mysql-billing:
+        condition: service_healthy
+    networks:
+      - backend
+
+
+
+  # -------------------- PrescriptionService -------------------- 
+  mysql-prescription:
+    image: mysql:8.0
+    container_name: mysql-prescription
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: prescription-service-db
+      MYSQL_PASSWORD: root
+    ports:
+      # - "3411:3306"   # host:container
+      - "3311:3306"   # host:container
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - prescription_db_data:/var/lib/mysql
+    networks:
+      - backend
+  
+  prescription-service:
+    build:
+      context: ./PrescriptionService
+      dockerfile: Dockerfile
+    container_name: prescription-service
+    restart: always
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-prescription:3306/prescription-service-db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SERVER_PORT: 8085
+    depends_on:
+      mysql-prescription:
+        condition: service_healthy
+    networks:
+      - backend
+
+  # -------------------- PaymentService --------------------  
+  mysql-payment:
+    image: mysql:8.0
+    container_name: mysql-payment
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: payment-service-db
+      MYSQL_PASSWORD: root
+    ports:
+      # - "3412:3306"   # host:container
+      - "3312:3306"   # host:container
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - payment_db_data:/var/lib/mysql
+    networks:
+      - backend
+  
+  payment-service:
+    build:
+      context: ./PaymentService
+      dockerfile: Dockerfile
+    container_name: payment-service
+    restart: always
+    ports:
+      - "8086:8086"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-payment:3306/payment-service-db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SERVER_PORT: 8086
+    depends_on:
+      mysql-payment:
+        condition: service_healthy
+    networks:
+      - backend
+
+
+
+  # -------------------- NotificationService -------------------- 
+  mysql-notification:
+    image: mysql:8.0
+    container_name: mysql-notification
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: notification-service-db
+      MYSQL_PASSWORD: root
+    ports:
+      # - "3413:3306"   # host:container
+      - "3313:3306"   # host:container
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - notification_db_data:/var/lib/mysql
+    networks:
+      - backend
+  
+  notification-service:
+    build:
+      context: ./NotificationService
+      dockerfile: Dockerfile
+    container_name: notification-service
+    restart: always
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-notification:3306/notification-service-db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_SHOW_SQL: "true"
+      SERVER_PORT: 8087
+    depends_on:
+      mysql-notification:
+        condition: service_healthy
+    networks:
+      - backend
+
+
+  api-gateway:
+    build:
+      context: ./ApiGateway2
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8091:8091"
+    depends_on:
+      - patient-service
+      - doctor-service
+      - appointment-service
+      - billing-service
+      - prescription-service
+      - payment-service
+      - notification-service
+    networks:
+      - backend
+
+# -------------------- Monitoring Stack --------------------
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: always
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - backend
+    depends_on:
+      - patient-service
+      - doctor-service
+      - appointment-service
+      - billing-service
+      - prescription-service
+      - payment-service
+      - notification-service
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    networks:
+      - backend
+
+# -------------------- Volumes and Networks --------------------
+volumes:
+  patient_db_data:
+  docter_db_data:
+  appointment_db_data:
+  billing_db_data:
+  prescription_db_data:
+  payment_db_data:
+  notification_db_data:
+
+networks:
+  backend:
+    driver: bridge

@@ -1,0 +1,165 @@
+#server:
+#  port: 8091
+#
+#  error:
+#    whitelabel:
+#      enabled: false
+#
+#spring:
+#  application:
+#    name: api-gateway
+#
+#  cloud:
+#    gateway:
+#      routes:
+#        # Patient Service
+#        - id: patient-service
+#          uri: http://patient-service:8081
+#          predicates:
+#            - Path=/api/v1/patients/**
+#
+##        # Doctor & Scheduling Service
+#        - id: doctor-service
+#          uri: http://doctor-service:8082
+#          predicates:
+#            - Path=/api/v1/doctors/**
+#
+#
+##        # Appointment Service
+#        - id: appointment-service
+#          uri: http://appointment-service:8083
+#          predicates:
+#            - Path=/api/v1/appointments/**
+#
+#        # Billing Service
+#        - id: billing-service
+#          uri: http://billing-service:8084
+#          predicates:
+#            - Path=/api/v1/bills/**
+#
+#
+#        # Prescription Service
+#        - id: prescription-service
+#          uri: http://prescription-service:8085
+#          predicates:
+#            - Path=/api/v1/prescriptions/**
+#
+#
+#        # Payment Service
+#        - id: payment-service
+#          uri: http://payment-service:8086
+#          predicates:
+#            - Path=/api/v1/payments/**
+#
+#
+#        # Notification Service
+#        - id: notification-service
+#          uri: http://notification-service:8087
+#          predicates:
+#            - Path=/api/v1/notifications/**
+#
+#
+#      globalcors:
+#        corsConfigurations:
+#          "[/**]":
+#            allowedOrigins: "*"
+#            allowedMethods: "*"
+#            allowedHeaders: "*"
+#
+#management:
+#  endpoint:
+#    gateway:
+#      enabled: true
+#    health:
+#      probes:
+#        enabled: true
+#  prometheus:
+#    enabled: true
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "*"
+#    metrics:
+#      export:
+#        enabled: true
+#  metrics:
+#    tags:
+#      application: api-gateway
+#
+#logging:
+#  level:
+#    org.springframework.cloud.gateway: DEBUG
+
+
+server:
+  port: 8091
+
+error:
+  whitelabel:
+    enabled: false
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      server:
+        webflux:
+          routes:
+            - id: patient-service
+              uri: http://patient-service:8081
+              predicates:
+                - Path=/api/v1/patients/**
+            - id: doctor-service
+              uri: http://doctor-service:8082
+              predicates:
+                - Path=/api/v1/doctors/**
+            - id: appointment-service
+              uri: http://appointment-service:8083
+              predicates:
+                - Path=/api/v1/appointments/**
+            - id: billing-service
+              uri: http://billing-service:8084
+              predicates:
+                - Path=/api/v1/bills/**
+            - id: prescription-service
+              uri: http://prescription-service:8085
+              predicates:
+                - Path=/api/v1/prescriptions/**
+            - id: payment-service
+              uri: http://payment-service:8086
+              predicates:
+                - Path=/api/v1/payments/**
+            - id: notification-service
+              uri: http://notification-service:8087
+              predicates:
+                - Path=/api/v1/notifications/**
+
+          # Updated CORS config (new key prefix)
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowed-origins: "*"
+                allowed-methods: "*"
+                allowed-headers: "*"
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    health:
+      probes:
+        enabled: true
+    # Replaced deprecated `management.endpoint.gateway.enabled`
+    gateway:
+      access: unrestricted
+  metrics:
+    tags:
+      application: api-gateway
+
+logging:
+  level:
+    org.springframework.cloud.gateway: INFO

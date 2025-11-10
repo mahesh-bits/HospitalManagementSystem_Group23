@@ -1,0 +1,226 @@
+version: "3.9"
+
+services:
+  # =========================
+  # Zookeeper for Kafka
+  # =========================
+  zookeeper:
+    image: wurstmeister/zookeeper:3.4.6
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+
+  # =========================
+  # Kafka Broker
+  # =========================
+  kafka:
+    image: wurstmeister/kafka:2.13-2.8.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    depends_on:
+      - zookeeper
+
+  # =========================
+  # Patient Service + MySQL
+  # =========================
+  patient-db:
+    image: mysql:8
+    container_name: patient-service-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: patient-service-db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    ports:
+      - "3307:3306"
+    volumes:
+      - patient-service-db-data:/var/lib/mysql
+
+  patient-service:
+    build: ./PatientService
+    container_name: patient-service
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://patient-db:3307/patient-service-db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - patient-db
+      - kafka
+
+  # =========================
+  # Doctor Service + MySQL
+  # =========================
+  doctor-db:
+    image: mysql:8
+    container_name: doctor-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: doctordb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "33062:3306"
+    volumes:
+      - doctor-db-data:/var/lib/mysql
+
+  doctor-service:
+    build: ./DoctorService
+    container_name: doctor-service
+    ports:
+      - "8082:8082"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://doctor-db:3306/doctordb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - doctor-db
+      - kafka
+
+  # =========================
+  # Appointment Service + MySQL
+  # =========================
+  appointment-db:
+    image: mysql:8
+    container_name: appointment-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: appointmentdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "33063:3306"
+    volumes:
+      - appointment-db-data:/var/lib/mysql
+
+  appointment-service:
+    build: ./AppointmentService
+    container_name: appointment-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://appointment-db:3306/appointmentdb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - appointment-db
+      - patient-service
+      - doctor-service
+      - kafka
+
+  # =========================
+  # Prescription Service + MySQL
+  # =========================
+  prescription-db:
+    image: mysql:8
+    container_name: prescription-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: prescriptiondb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "33064:3306"
+    volumes:
+      - prescription-db-data:/var/lib/mysql
+
+  prescription-service:
+    build: ./PrescriptionService
+    container_name: prescription-service
+    ports:
+      - "8084:8084"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://prescription-db:3306/prescriptiondb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - prescription-db
+      - appointment-service
+      - kafka
+
+  # =========================
+  # Payment Service + MySQL
+  # =========================
+  payment-db:
+    image: mysql:8
+    container_name: payment-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: paymentdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "33065:3306"
+    volumes:
+      - payment-db-data:/var/lib/mysql
+
+  payment-service:
+    build: ./PaymentService
+    container_name: payment-service
+    ports:
+      - "8085:8085"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://payment-db:3306/paymentdb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+    depends_on:
+      - payment-db
+      - kafka
+
+  # =========================
+  # Notification Service + MySQL
+  # =========================
+  notification-db:
+    image: mysql:8
+    container_name: notification-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass
+      MYSQL_DATABASE: notificationdb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+    ports:
+      - "33066:3306"
+    volumes:
+      - notification-db-data:/var/lib/mysql
+
+  notification-service:
+    build: ./NotificationService
+    container_name: notification-service
+    ports:
+      - "8087:8087"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://notification-db:3306/notificationdb
+      SPRING_DATASOURCE_USERNAME: user
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_MAIL_HOST: smtp.gmail.com        # For test emails
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: your-email@gmail.com
+      SPRING_MAIL_PASSWORD: your-email-password
+    depends_on:
+      - notification-db
+      - kafka
+
+# =========================
+# Volumes
+# =========================
+volumes:
+  patient-db-data:
+  doctor-db-data:
+  appointment-db-data:
+  prescription-db-data:
+  payment-db-data:
+  notification-db-data:
